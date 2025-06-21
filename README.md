@@ -1,6 +1,16 @@
 # AI Agent with Gemini API
 This project implements an AI agent that uses Google's Gemini API to interact with a codebase. The agent can perform various operations like listing files, reading file contents, executing Python files, and writing to files.
 
+The program is a CLI tool that:
+
+1. Accepts a coding task (e.g., "strings aren't splitting in my app, pweeze fix 🥺👉🏽👈🏽")
+2. Chooses from a set of predefined functions to work on the task, for example:
++ Scan the files in a directory
++ Read a file's contents
++ Overwrite a file's contents
++ Execute the python interpreter on a file
+3. Repeats step 2 until the task is complete (or it fails miserably, which is possible)
+
 ## Features
 + Interactive AI agent using Gemini API
 + File system operations:
@@ -18,17 +28,15 @@ This project implements an AI agent that uses Google's Gemini API to interact wi
 ## Installation
 1. Clone the repository:
 
-```
+``` bash
 git clone <repository-url>
 cd <repository-name>
 ```
 
 2. Install required packages:
-```
 
-pip install -r requirements.txt
+`pip install -r requirements.txt`
 
-```
 3. Create a .env file in the project root and add your Gemini API key:
 ```
 
