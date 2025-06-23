@@ -11,6 +11,5 @@ def get_files_info(working_directory, directory=None):
     if not os.path.isdir(directory):
         return (f"Error: '{directory}' is not a directory")
 
-    # if directory is not provided, use working_directory
-    if directory is None:
-        directory = working_directory
+    # Build and return a string representing the contents of the directory
+    return "Contents of the directory:\n" + "\n".join(os.listdir(directory))
