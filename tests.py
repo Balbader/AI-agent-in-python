@@ -1,6 +1,8 @@
-from functions.get_file_content import get_file_content
+from functions.write_file import write_file
 
-print(get_file_content("./calculator", "./calculator/lorem.txt"))
-print(get_file_content("./calculator", "./calculator/main.py"))
-print(get_file_content("./calculator", "./calculator/pkg/calculator.py"))
-print(get_file_content("./calculator", "/bin/cat"))
+print(write_file("./calculator", "./calculator/lorem.txt",
+                 "wait, this isn't lorem ipsum"))
+print(write_file("./calculator", "./calculator/morelorem.txt",
+                 "lorem ipsum dolor sit amet"))
+print(write_file("./calculator", "/tmp/temp.txt",
+                 "this should not be allowed"))
