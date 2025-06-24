@@ -1,7 +1,5 @@
-from functions.run_python import run_python
+from functions.get_files_info import get_files_info
 
 
-print(run_python("calculator", "main.py"))
-print(run_python("calculator", "tests.py"))
-print(run_python("calculator", "../main.py"))
-print(run_python("calculator", "nonexistent.py"))
+print(get_files_info("."))
+print(get_files_info("calculator", "./calculator/pkg"))
