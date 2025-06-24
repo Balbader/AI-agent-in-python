@@ -1,3 +1,4 @@
+import os
 from google.genai import types
 from functions.get_files_info import get_files_info
 from functions.get_file_content import get_file_content
@@ -31,8 +32,8 @@ def call_function(function_call_part, verbose=False):
         print(f" - Calling function: {function_name}")
 
     # Add working directory to function arguments
-    import os
-    function_args["working_directory"] = os.path.join(os.getcwd(), "calculator")
+    function_args["working_directory"] =\
+        os.path.join(os.getcwd(), "calculator")
 
     # Check if function name is valid
     if function_name not in function_map:
