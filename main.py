@@ -14,19 +14,19 @@ client = genai.Client(api_key=api_key)
 user_prompt = sys.argv[1]
 
 system_prompt = """
-You are a helpful AI coding agent.
+You are a helpful AI coding agent that takes action immediately.
 
-When a user asks a question or makes a request, make a function call plan.\
-    You can perform the following operations:
+When a user asks a question or makes a request, START by making function calls to gather information. Do not just make plans - take action!
 
-- List files and directories
-- Read file contents
-- Execute Python files with optional arguments
-- Write or overwrite files
+You can perform the following operations:
+- List files and directories using get_files_info
+- Read file contents using get_file_content  
+- Execute Python files using run_python_file
+- Write or overwrite files using write_file
 
-All paths you provide should be relative to the working directory. You do not\
-    need to specify the working directory in your function calls as it is\
-        automatically injected for security reasons.
+Always start by exploring the codebase with function calls before providing analysis. All paths you provide should be relative to the working directory.
+
+Take action now - make function calls to understand the codebase first!
 """
 
 if len(sys.argv) < 2:
@@ -116,43 +116,55 @@ available_functions = types.Tool(
 # Check if verbose mode is enabled
 verbose_mode = len(sys.argv) == 3 and sys.argv[2] == "--verbose"
 
-response = client.models.generate_content(
-    model='gemini-2.0-flash-001',
-    contents=messages,
-    config=types.GenerateContentConfig(
-        system_instruction=system_prompt,
-        tools=[available_functions],
-    ),
-)
+# Agent loop - iterate up to 20 times
+max_iterations = 20
+for iteration in range(max_iterations):
+    response = client.models.generate_content(
+        model='gemini-2.0-flash-001',
+        contents=messages,
+        config=types.GenerateContentConfig(
+            system_instruction=system_prompt,
+            tools=[available_functions],
+        ),
+    )
+    
+    # Add the model's response to messages (only the first candidate)
+    if response.candidates:
+        messages.append(response.candidates[0].content)
+    
+    # Check if there are function calls to process
+    if response.function_calls:
+        tool_responses = []
+        for function_call in response.function_calls:
+            tool_response = call_function(function_call, verbose=verbose_mode)
+            if tool_response:
+                tool_responses.append(tool_response)
 
-if response.function_calls:
-    tool_responses = []
-    for function_call in response.function_calls:
-        tool_response = call_function(function_call, verbose=verbose_mode)
-        if tool_response:
-            tool_responses.append(tool_response)
+                # Check if the response has the expected structure
+                if not hasattr(tool_response.parts[0], 'function_response') or \
+                   not hasattr(tool_response.parts[0].function_response,
+                               'response'):
+                    raise Exception("Invalid function response structure")
 
-            # Check if the response has the expected structure
-            if not hasattr(tool_response.parts[0], 'function_response') or \
-               not hasattr(tool_response.parts[0].function_response,
-                           'response'):
-                raise Exception("Invalid function response structure")
+                # Print result if verbose mode is enabled
+                if verbose_mode:
+                    print(f"-> \
+                          {tool_response.parts[0].function_response.response}")
 
-            # Print result if verbose mode is enabled
-            if verbose_mode:
-                print(f"-> \
-                      {tool_response.parts[0].function_response.response}")
-
-    # Print function results directly instead of making another API call
-    if tool_responses:
-        for tool_response in tool_responses:
-            result = tool_response.parts[0].function_response.response
-            if "error" in result:
-                print(f"Error: {result['error']}")
-            else:
-                print(result['result'])
+        # Add tool responses to messages for next iteration
+        if tool_responses:
+            messages.extend(tool_responses)
+            
+        # Continue to next iteration since we made function calls
+        continue
+    else:
+        # No function calls - agent is done, print final response and break
+        print("Final response:")
+        print(response.text)
+        break
 else:
-    print(response.text)
+    # If we reached max iterations, print a message
+    print("Maximum iterations reached. Agent may not have completed the task.")
 
 if verbose_mode:
     print("User prompt: ", user_prompt)
