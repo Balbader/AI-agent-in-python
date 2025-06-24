@@ -4,7 +4,12 @@ import os
 def write_file(working_directory, file_path, content):
     # Resolve both paths to absolute paths for proper comparison
     abs_working_dir = os.path.abspath(working_directory)
-    abs_file_path = os.path.abspath(file_path)
+    
+    # If file_path is relative, join it with the working directory
+    if os.path.isabs(file_path):
+        abs_file_path = os.path.abspath(file_path)
+    else:
+        abs_file_path = os.path.abspath(os.path.join(abs_working_dir, file_path))
 
     # Check if the file path is within the working directory
     if not abs_file_path.startswith(abs_working_dir):

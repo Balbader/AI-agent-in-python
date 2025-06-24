@@ -39,24 +39,21 @@ def run_python(working_directory, file_path):
             timeout=30,
             text=True,
         )
-        print("STDOUT:\n", result.stdout)
-        print("STDERR:\n", result.stderr)
 
         # if the process exits with a non-zero exit code, return an error
         if result.returncode != 0:
-            return (f'Process exited with code {result.returncode}.')
+            return (f'Process exited with code {result.returncode}.\n\
+                    STDOUT:\n{result.stdout}\n\
+                    STDERR:\n{result.stderr}')
 
-        # if no output is returned, return an error
-        if result is None:
-            return ('No output produced.')
+        # Return the output as a string
+        output = f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+        return output
 
     # if the process exits with a timeout, return an error
     except subprocess.TimeoutExpired:
-        print("The script timed out after 30 seconds.")
+        return "The script timed out after 30 seconds."
 
     # if an error occurs, return an error
     except Exception as e:
-        print(f"An error occurred: {e}")
-
-    # return the result
-    return result
+        return f"An error occurred: {e}"

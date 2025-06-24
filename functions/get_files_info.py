@@ -2,26 +2,35 @@ import os
 
 
 def get_files_info(working_directory, directory=None):
+    # Convert working directory to absolute path
+    abs_working_dir = os.path.abspath(working_directory)
+    
     # if directory is not provided, use working_directory
     if directory is None:
-        directory = working_directory
+        target_directory = abs_working_dir
+    else:
+        # If directory is relative, join it with the working directory
+        if os.path.isabs(directory):
+            target_directory = os.path.abspath(directory)
+        else:
+            target_directory = os.path.abspath(os.path.join(abs_working_dir, directory))
 
     # if directory is outside of working_directory, raise an error
-    if directory and not working_directory.startswith(directory):
+    if not target_directory.startswith(abs_working_dir):
         return (f"Error: Cannot list '{directory}' because it is outside\
                 of the permitted working directory")
 
     # if directory is not a directory, raise an error
-    if directory and not os.path.isdir(directory):
+    if not os.path.isdir(target_directory):
         return (f"Error: '{directory}' is not a directory")
 
     try:
         # List all items in the directory
-        items = os.listdir(directory)
+        items = os.listdir(target_directory)
         result_lines = []
 
         for item in sorted(items):
-            item_path = os.path.join(directory, item)
+            item_path = os.path.join(target_directory, item)
 
             # Check if it's a directory
             is_dir = os.path.isdir(item_path)

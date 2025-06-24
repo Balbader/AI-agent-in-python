@@ -3,6 +3,7 @@ import sys
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from functions.call_function import call_function
 
 load_dotenv()
 
@@ -87,7 +88,7 @@ schema_write_file = types.FunctionDeclaration(
     ),
 )
 
-schema_run_python_file = types.FunctionDeclaration(
+schema_run_python = types.FunctionDeclaration(
     name="run_python_file",
     description="Runs the specified Python file.",
     parameters=types.Schema(
@@ -107,9 +108,13 @@ available_functions = types.Tool(
         schema_get_files_info,
         schema_get_file_content,
         schema_write_file,
-        schema_run_python_file,
+        schema_run_python,
     ]
 )
+
+
+# Check if verbose mode is enabled
+verbose_mode = len(sys.argv) == 3 and sys.argv[2] == "--verbose"
 
 response = client.models.generate_content(
     model='gemini-2.0-flash-001',
@@ -119,13 +124,37 @@ response = client.models.generate_content(
         tools=[available_functions],
     ),
 )
+
 if response.function_calls:
+    tool_responses = []
     for function_call in response.function_calls:
-        print(f"Calling function: {function_call.name} ({function_call.args})")
+        tool_response = call_function(function_call, verbose=verbose_mode)
+        if tool_response:
+            tool_responses.append(tool_response)
+
+            # Check if the response has the expected structure
+            if not hasattr(tool_response.parts[0], 'function_response') or \
+               not hasattr(tool_response.parts[0].function_response,
+                           'response'):
+                raise Exception("Invalid function response structure")
+
+            # Print result if verbose mode is enabled
+            if verbose_mode:
+                print(f"-> \
+                      {tool_response.parts[0].function_response.response}")
+
+    # Print function results directly instead of making another API call
+    if tool_responses:
+        for tool_response in tool_responses:
+            result = tool_response.parts[0].function_response.response
+            if "error" in result:
+                print(f"Error: {result['error']}")
+            else:
+                print(result['result'])
 else:
     print(response.text)
 
-if len(sys.argv) == 3 and sys.argv[2] == "--verbose":
+if verbose_mode:
     print("User prompt: ", user_prompt)
     print("Prompt tokens:", response.usage_metadata.prompt_token_count)
     print("Response tokens:", response.usage_metadata.candidates_token_count)
