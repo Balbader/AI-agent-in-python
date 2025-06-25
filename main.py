@@ -16,15 +16,17 @@ user_prompt = sys.argv[1]
 system_prompt = """
 You are a helpful AI coding agent that takes action immediately.
 
-When a user asks a question or makes a request, START by making function calls to gather information. Do not just make plans - take action!
+When a user asks a question or makes a request, START by making function calls
+to gather information. Do not just make plans - take action!
 
 You can perform the following operations:
 - List files and directories using get_files_info
-- Read file contents using get_file_content  
+- Read file contents using get_file_content
 - Execute Python files using run_python_file
 - Write or overwrite files using write_file
 
-Always start by exploring the codebase with function calls before providing analysis. All paths you provide should be relative to the working directory.
+Always start by exploring the codebase with function calls before providing
+analysis. All paths you provide should be relative to the working directory.
 
 Take action now - make function calls to understand the codebase first!
 """
@@ -127,11 +129,11 @@ for iteration in range(max_iterations):
             tools=[available_functions],
         ),
     )
-    
+
     # Add the model's response to messages (only the first candidate)
     if response.candidates:
         messages.append(response.candidates[0].content)
-    
+
     # Check if there are function calls to process
     if response.function_calls:
         tool_responses = []
@@ -141,7 +143,7 @@ for iteration in range(max_iterations):
                 tool_responses.append(tool_response)
 
                 # Check if the response has the expected structure
-                if not hasattr(tool_response.parts[0], 'function_response') or \
+                if not hasattr(tool_response.parts[0], 'function_response') or\
                    not hasattr(tool_response.parts[0].function_response,
                                'response'):
                     raise Exception("Invalid function response structure")
@@ -154,7 +156,7 @@ for iteration in range(max_iterations):
         # Add tool responses to messages for next iteration
         if tool_responses:
             messages.extend(tool_responses)
-            
+
         # Continue to next iteration since we made function calls
         continue
     else:
